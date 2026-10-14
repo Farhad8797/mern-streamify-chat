@@ -1,12 +1,15 @@
-import express from "express";
-import { type Express } from "express";
 import dotenv from "dotenv";
+import app from "./app.js";
+import dbConnect from "./utils/dbConnect.js";
 
 dotenv.config();
 
-const app: Express = express();
-
-const port = process.env.PORT || 8000;
-app.listen(port, () => {
-  console.log(`Listening to port : ${port}`);
-});
+dbConnect()
+  .then(() => {
+    app.listen(process.env.PORT || 8000, () => {
+      console.log(`Listening to port: ${process.env.PORT}`);
+    });
+  })
+  .catch((err: any) => {
+    console.error(`Error connecting to database and listening to port`);
+  });
