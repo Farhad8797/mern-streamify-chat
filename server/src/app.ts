@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { type Express } from "express";
+import type { Request, Response } from "express";
+import apiResponse from "./utils/apiResponse.js";
 
 const app: Express = express();
 
@@ -30,8 +32,19 @@ app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
 
-app.use("/auth", (req, res) => {
-  res.status(200).json("Hello!");
+import userRoute from "./routes/userRoutes.js";
+
+const header = "/api/v1";
+
+app.use(`${header}`, userRoute);
+app.use("/*splat", (req: Request, res: Response) => {
+  return res.status(404).json(
+    apiResponse({
+      statusCode: 404,
+      message: `Page ${req.originalUrl} Not Found!`,
+      success: false,
+    }),
+  );
 });
 
 export default app;

@@ -5,7 +5,7 @@ interface ApiResponse {
   data?: any;
 }
 
-export function apiResponse({
+export default function apiResponse({
   statusCode,
   message,
   success = true,
