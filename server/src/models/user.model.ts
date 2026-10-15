@@ -34,9 +34,11 @@ const UserSchema = new Schema<
     fullName: {
       type: String,
       required: true,
-      trim: true,
-      lowercase: true,
       index: true,
+      match: [
+        /^[a-zA-Z]+([a-zA-Z\s.]*[a-zA-Z])?$/,
+        "Full name contains invalid characters or numbers.",
+      ],
     },
 
     email: {
@@ -47,7 +49,7 @@ const UserSchema = new Schema<
       lowercase: true,
       match: [
         /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-        "Please provide a valid email",
+        "Please provide a valid email.",
       ],
     },
 
@@ -74,10 +76,12 @@ const UserSchema = new Schema<
       required: [true, "Password is mandatory"],
       min: [6, "Password must contain at least 6 characters"],
       max: [15, "Password should not exceed 15 characters"],
+      select: false,
     },
 
     refreshToken: {
       type: String,
+      select: false,
     },
   },
   { timestamps: true },
@@ -90,7 +94,7 @@ UserSchema.pre("save", async function () {
 
 UserSchema.method(
   "isPasswordCorrect",
-  async function isPasswordCorrect(password) {
+  async function isPasswordCorrect(password: string) {
     return await bcrypt.compare(password, this.password);
   },
 );

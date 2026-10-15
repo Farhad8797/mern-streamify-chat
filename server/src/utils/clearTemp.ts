@@ -1,0 +1,18 @@
+import * as fs from "fs";
+import path from "path";
+
+export default function clearTemp() {
+  const folderPath = path.join(process.cwd(), "public", "temp");
+  if (!fs.existsSync(folderPath)) return;
+
+  const files = fs.readdirSync(folderPath);
+
+  if (!files) return;
+  for (let file of files) {
+    const filePath = path.join(folderPath, file);
+    if (!fs.statSync(filePath).isFile()) return;
+    fs.unlinkSync(filePath);
+  }
+  console.log("Temp files have been deleted");
+  return;
+}
