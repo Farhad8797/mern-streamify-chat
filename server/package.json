@@ -22,7 +22,8 @@
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.11.1",
-    "multer": "^2.4.0"
+    "multer": "^2.4.0",
+    "resend": "^6.33.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",

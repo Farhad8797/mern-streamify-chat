@@ -17,6 +17,9 @@ interface UserInterface {
   refreshToken: string;
   createdAt: Date;
   updatedAt: Date;
+  isVerified: boolean;
+  emailVerificationToken: string;
+  emailVerificationExpiry: Date;
 }
 
 interface UserMethods {
@@ -83,6 +86,13 @@ const UserSchema = new Schema<
       type: String,
       select: false,
     },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: String,
+    emailVerificationExpiry: Date,
   },
   { timestamps: true },
 );
