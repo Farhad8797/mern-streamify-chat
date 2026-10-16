@@ -14,8 +14,11 @@ import {
   verifyPasswordRecoveryEmail,
   updatePassword,
 } from "../controllers/user.controller.js";
+import arcjetProtection from "../middleware/aj.js";
 
 const userRoute = Router();
+
+userRoute.use(arcjetProtection);
 
 userRoute.post(
   "/register",

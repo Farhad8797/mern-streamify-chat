@@ -4,7 +4,6 @@ import clearTemp from "../utils/clearTemp.js";
 import apiResponse from "../utils/apiResponse.js";
 import crypto from "crypto";
 import generateTokenPair from "../utils/generateTokenPair.js";
-import type { CookieOptions } from "express";
 import type { CustomJwtPayload } from "../middleware/auth.js";
 import jwt from "jsonwebtoken";
 import client from "../config/imagekit.js";
@@ -17,14 +16,7 @@ import {
   sendPasswordRecoveryEmail,
   sendProfileUpdateNotification,
 } from "../utils/accountUpdateEmail.js";
-
-const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
-
-const options: CookieOptions = {
-  secure: process.env.NODE_END === "production" ? true : false,
-  httpOnly: true,
-  path: "/",
-};
+import { options, frontendURL } from "../constants/info.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const { fullName, email, password } = req.body;
