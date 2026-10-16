@@ -14,10 +14,11 @@ import redis from "../config/redis.js";
 import {
   sendEmailChangeAlert,
   sendEmailChangeVerification,
+  sendPasswordRecoveryEmail,
   sendProfileUpdateNotification,
 } from "../utils/accountUpdateEmail.js";
 
-const frontendURL = process.env.FRONTEND_URL || "http://localhost:8000";
+const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const options: CookieOptions = {
   secure: process.env.NODE_END === "production" ? true : false,
@@ -127,7 +128,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   clearTemp();
 
-  const emailVerificationURL = `${frontendURL}/api/v1/verify-email/?token=${emailVerificationToken}`;
+  const emailVerificationURL = `${frontendURL}/verify-email?token=${emailVerificationToken}`;
   await signUpEmail(fullName, emailVerificationURL);
 
   const createdUser = await User.findById(user._id);
@@ -493,7 +494,114 @@ const verifyNewEmail = asyncHandler(async (req, res) => {
   );
 });
 
-const recoverPassword = asyncHandler(async (req, res) => {});
+const resetPassword = asyncHandler(async (req, res) => {
+  const passwordRecoveryToken = crypto.randomBytes(32).toString("hex");
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "Email is missing",
+        success: false,
+      }),
+    );
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "No user found for this email.",
+      }),
+    );
+  }
+  const redisKey = `password-change:${passwordRecoveryToken}`;
+  await redis.setex(redisKey, 900, JSON.stringify({ userId: user._id }));
+  const resetUrl = `${frontendURL}/verify-password-recovery-email?token=${passwordRecoveryToken}`;
+
+  await sendPasswordRecoveryEmail(user!.email, resetUrl);
+
+  return res.status(200).json(
+    apiResponse({
+      statusCode: 200,
+      message: "An email has been sent to the user",
+    }),
+  );
+});
+
+const verifyPasswordRecoveryEmail = asyncHandler(async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "Token missing",
+        success: false,
+      }),
+    );
+  }
+
+  const tokenInfo = await redis.get(`password-change:${token}`);
+  if (!tokenInfo) {
+    res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "Inavliad or expired token",
+      }),
+    );
+  }
+
+  return res.redirect(
+    `${process.env.FRONTEND_URL}/change-password?token=${token}&verified=true`,
+  );
+});
+
+const updatePassword = asyncHandler(async (req, res) => {
+  const { token } = req.query;
+  const { password, confirmPassword } = req.body;
+
+  if (
+    !token ||
+    !password ||
+    !confirmPassword ||
+    !(password === confirmPassword)
+  ) {
+    return res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "Token or password missing or mismatched password",
+        success: false,
+      }),
+    );
+  }
+
+  const tokenInfo = await redis.get(`password-change:${token}`);
+  if (!tokenInfo) {
+    res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "Inavliad or expired token",
+      }),
+    );
+  }
+
+  const { userId } = JSON.parse(tokenInfo as string);
+  const user = await User.findById(userId);
+
+  user!.password = password;
+  await user!.save();
+  await redis.del(`password-change:${token}`);
+  return res.status(200).json(
+    apiResponse({
+      message: "Password updated successfully",
+      statusCode: 200,
+    }),
+  );
+});
 
 export {
   registerUser,
@@ -503,4 +611,7 @@ export {
   updateUserInfo,
   refreshToken,
   verifyNewEmail,
+  resetPassword,
+  verifyPasswordRecoveryEmail,
+  updatePassword,
 };
