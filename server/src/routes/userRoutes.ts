@@ -1,12 +1,15 @@
 import { Router } from "express";
-import { verifyJWT } from "../middleware/auth.js";
+import { redirectIfAuthenticated, verifyJWT } from "../middleware/auth.js";
 import { upload } from "../middleware/multer.js";
 
 import {
   registerUser,
   signIn,
-  verifyEmail,
+  verifySignUpEmail,
   signOut,
+  updateUserInfo,
+  refreshToken,
+  verifyNewEmail,
 } from "../controllers/user.controller.js";
 
 const userRoute = Router();
@@ -26,8 +29,11 @@ userRoute.post(
   registerUser,
 );
 
-userRoute.get("/verify-email/", verifyEmail);
-userRoute.post("/sign-in/", signIn);
+userRoute.get("/verify-email/", verifySignUpEmail);
+userRoute.post("/sign-in/", redirectIfAuthenticated, signIn);
 userRoute.post("/sign-out", verifyJWT, signOut);
+userRoute.patch("/update-user-info", verifyJWT, updateUserInfo);
+userRoute.post("/refresh-token", refreshToken);
+userRoute.get("/verify-email-change", verifyNewEmail);
 
 export default userRoute;

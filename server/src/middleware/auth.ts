@@ -55,3 +55,22 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   req.user = user;
   next();
 });
+
+export const redirectIfAuthenticated = asyncHandler(async (req, res, next) => {
+  const token = req.cookies?.accessToken;
+
+  if (!token) {
+    next();
+  }
+  const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string);
+
+  if (decoded) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "You are already logged in. Please log out first or go to the dashboard.",
+    });
+  }
+
+  next();
+});

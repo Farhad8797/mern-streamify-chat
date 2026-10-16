@@ -2,11 +2,20 @@ import User from "../models/user.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import clearTemp from "../utils/clearTemp.js";
 import apiResponse from "../utils/apiResponse.js";
-import uploadFile from "../config/imagekit.js";
 import crypto from "crypto";
-import sendEmail from "../config/resend.js";
 import generateTokenPair from "../utils/generateTokenPair.js";
 import type { CookieOptions } from "express";
+import type { CustomJwtPayload } from "../middleware/auth.js";
+import jwt from "jsonwebtoken";
+import client from "../config/imagekit.js";
+import uploadFile from "../utils/mediaUpload.js";
+import signUpEmail from "../utils/signUpEmail.js";
+import redis from "../config/redis.js";
+import {
+  sendEmailChangeAlert,
+  sendEmailChangeVerification,
+  sendProfileUpdateNotification,
+} from "../utils/accountUpdateEmail.js";
 
 const frontendURL = process.env.FRONTEND_URL || "http://localhost:8000";
 
@@ -74,7 +83,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const emailVerificationURL = `${frontendURL}/api/v1/verify-email/?token=${emailVerificationToken}`;
 
     await existingUser.save({ validateBeforeSave: false });
-    await sendEmail(fullName, emailVerificationURL);
+    await signUpEmail(fullName, emailVerificationURL);
     clearTemp();
     return res.status(200).json(
       apiResponse({
@@ -119,7 +128,7 @@ const registerUser = asyncHandler(async (req, res) => {
   clearTemp();
 
   const emailVerificationURL = `${frontendURL}/api/v1/verify-email/?token=${emailVerificationToken}`;
-  await sendEmail(fullName, emailVerificationURL);
+  await signUpEmail(fullName, emailVerificationURL);
 
   const createdUser = await User.findById(user._id);
   return res.status(201).json(
@@ -131,7 +140,7 @@ const registerUser = asyncHandler(async (req, res) => {
   );
 });
 
-const verifyEmail = asyncHandler(async (req, res) => {
+const verifySignUpEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
 
   if (!token) {
@@ -241,8 +250,11 @@ const signOut = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .clearCookie("accessToken")
-    .clearCookie("refreshToken")
+    .clearCookie("accessToken", { ...options, maxAge: 30 * 60 * 1000 })
+    .clearCookie("refreshToken", {
+      ...options,
+      maxAge: 15 * 24 * 68 * 68 * 1000,
+    })
     .json(
       apiResponse({
         statusCode: 200,
@@ -251,4 +263,244 @@ const signOut = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser, verifyEmail, signIn, signOut };
+const updateUserInfo = asyncHandler(async (req, res) => {
+  const { fullname, email } = req.body;
+  const files = req.files && !Array.isArray(req.files) ? req.files : undefined;
+
+  const avatarLocalPath = files?.avatar?.[0]?.path;
+  const coverImageLocalPath = files?.coverImage?.[0]?.path;
+
+  const avatar = avatarLocalPath
+    ? await uploadFile(avatarLocalPath as string, "avatar")
+    : undefined;
+  const coverImage = coverImageLocalPath
+    ? await uploadFile(coverImageLocalPath as string, "coverImage")
+    : undefined;
+
+  const user = await User.findById(req.user._id);
+
+  const mediaFilesToBeDeleted = [
+    avatar?.fileId ? user!.avatarFile.avatarId : null,
+    coverImage?.fileId ? user!.coverImageFile.coverImageId : null,
+  ].filter(Boolean) as string[];
+
+  if (mediaFilesToBeDeleted.length > 0) {
+    await client.files.bulk.delete({ fileIds: mediaFilesToBeDeleted });
+  }
+
+  user!.fullName = fullname || user!.fullName;
+  user!.avatarFile.avatarUrl = avatar?.url || user!.avatarFile.avatarUrl;
+  user!.avatarFile.avatarId = avatar?.fileId || user!.avatarFile.avatarId;
+  user!.coverImageFile.coverImageId =
+    coverImage?.fileId || user!.coverImageFile.coverImageId;
+  user!.coverImageFile.coverImageUrl =
+    coverImage?.url || user!.coverImageFile.coverImageUrl;
+
+  let emailChangePending = false;
+
+  if (email && email !== user!.email) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json(
+        apiResponse({
+          statusCode: 400,
+          message: "Email is already in use",
+          success: false,
+        }),
+      );
+    }
+
+    const emailToken = crypto.randomBytes(32).toString("hex");
+    const redisKey = `email-change:${emailToken}`;
+
+    await redis.setex(
+      redisKey,
+      900,
+      JSON.stringify({ userId: user!._id, newEmail: email }),
+    );
+
+    await Promise.all([
+      sendEmailChangeVerification(email, emailToken),
+      sendEmailChangeAlert(user!.email),
+    ]);
+
+    emailChangePending = true;
+  }
+
+  await user!.save();
+  sendProfileUpdateNotification(user!.email);
+  clearTemp();
+
+  return res.status(200).json(
+    apiResponse({
+      statusCode: 200,
+      message: emailChangePending
+        ? "User info updated. Please check your new email inbox to verify your email change."
+        : "User info updated successfully",
+      data: {
+        emailChangePending,
+      },
+    }),
+  );
+});
+
+const refreshToken = asyncHandler(async (req, res) => {
+  const servedRefreshToken = req.cookies?.refreshToken;
+
+  if (!servedRefreshToken) {
+    res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "Please provide refresh token",
+        success: false,
+      }),
+    );
+  }
+
+  const isValidToken = jwt.verify(
+    servedRefreshToken,
+    process.env.REFRESH_TOKEN_SECRET as string,
+  ) as CustomJwtPayload;
+
+  if (!isValidToken) {
+    return res.status(401).json(
+      apiResponse({
+        statusCode: 401,
+        message: "Invalid token",
+        success: false,
+      }),
+    );
+  }
+
+  const user = await User.findById(isValidToken?._id);
+
+  if (!user) {
+    return res.status(401).json(
+      apiResponse({
+        statusCode: 401,
+        message: "Unauthorized",
+        success: false,
+      }),
+    );
+  }
+
+  if (!user.refreshToken) {
+    return res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "User does not contain any refresh token inside database",
+        success: false,
+      }),
+    );
+  }
+
+  const matchRefereshTokens = user.refreshToken === servedRefreshToken;
+
+  if (!matchRefereshTokens) {
+    return res.status(401).json(
+      apiResponse({
+        statusCode: 400,
+        message: "Refresh tokens does not match with the stored token",
+        success: false,
+      }),
+    );
+  }
+
+  const { accessToken, refreshToken } = await generateTokenPair(
+    user._id.toString(),
+  );
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, { ...options, maxAge: 30 * 68 * 1000 })
+    .cookie("refreshToken", refreshToken, {
+      ...options,
+      maxAge: 15 * 24 * 60 * 60 * 1000,
+    })
+    .json(
+      apiResponse({
+        statusCode: 200,
+        message: "New refresh token generated successfully!",
+        data: { refreshToken },
+      }),
+    );
+});
+
+const verifyNewEmail = asyncHandler(async (req, res) => {
+  const token = req.query;
+
+  if (!token || typeof token !== "string") {
+    return res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "Email change verification token is missing or invalid",
+        success: false,
+      }),
+    );
+  }
+
+  const redisKey = `email-change:${token}`;
+  const tokenDataString = await redis.get(redisKey);
+
+  if (!tokenDataString) {
+    return res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message:
+          "Email change link is invalid or has expired (15-minute limit)",
+        success: false,
+      }),
+    );
+  }
+
+  const { userId, newEmail } = JSON.parse(tokenDataString as string);
+  const emailTaken = await User.findOne({ email: newEmail });
+
+  if (emailTaken) {
+    await redis.del(redisKey);
+    return res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "This email address is already registered to another account",
+        success: false,
+      }),
+    );
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    await redis.del(redisKey);
+    return res.status(404).json(
+      apiResponse({
+        statusCode: 404,
+        message: "User account not found",
+        success: false,
+      }),
+    );
+  }
+
+  user.email = newEmail;
+  await user.save();
+
+  await redis.del(redisKey);
+
+  return res.status(200).json(
+    apiResponse({
+      statusCode: 200,
+      message: "Email address updated successfully!",
+      success: true,
+    }),
+  );
+});
+
+const recoverPassword = asyncHandler(async (req, res) => {});
+
+export {
+  registerUser,
+  verifySignUpEmail,
+  signIn,
+  signOut,
+  updateUserInfo,
+  refreshToken,
+  verifyNewEmail,
+};
