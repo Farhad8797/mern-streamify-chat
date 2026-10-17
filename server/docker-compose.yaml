@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:alpine
+    container_name: mern-streamify-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-mysecretpassword8797@gmail.com}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "-a",
+          "${REDIS_PASSWORD:-mysecretpassword8797@gmail.com}",
+          "ping",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis-data:
+    driver: local

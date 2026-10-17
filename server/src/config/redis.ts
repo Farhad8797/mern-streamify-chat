@@ -3,6 +3,7 @@ import { Redis } from "ioredis";
 const redis = new Redis({
   host: (process.env.REDIS_HOST || "127.0.0.1") as string,
   port: (process.env.REDIS_PORT || 6379) as number,
+  password: process.env.REDIS_PASSWORD,
   maxRetriesPerRequest: null,
   // password field is required in production
   // Use tls for redis services
