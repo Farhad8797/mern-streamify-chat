@@ -32,11 +32,13 @@ app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
 
-import userRoute from "./routes/userRoutes.js";
+import userRoute from "./routes/user.routes.js";
+import messageRoute from "./routes/message.routes.js";
 
 const header = "/api/v1";
 
 app.use(`${header}`, userRoute);
+app.use(`${header}`, messageRoute);
 app.use("/*splat", (req: Request, res: Response) => {
   return res.status(404).json(
     apiResponse({

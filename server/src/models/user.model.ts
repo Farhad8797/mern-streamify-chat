@@ -38,6 +38,7 @@ const UserSchema = new Schema<
       type: String,
       required: true,
       index: true,
+      trim: true,
       match: [
         /^[a-zA-Z]+([a-zA-Z\s.]*[a-zA-Z])?$/,
         "Full name contains invalid characters or numbers.",
@@ -57,21 +58,13 @@ const UserSchema = new Schema<
     },
 
     avatarFile: {
-      avatarUrl: {
-        type: String,
-      },
-      avatarId: {
-        type: String,
-      },
+      avatarUrl: String,
+      avatarId: String,
     },
 
     coverImageFile: {
-      coverImageUrl: {
-        type: String,
-      },
-      coverImageId: {
-        type: String,
-      },
+      coverImageUrl: String,
+      coverImageId: String,
     },
 
     password: {

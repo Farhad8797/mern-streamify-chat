@@ -62,15 +62,20 @@ export const redirectIfAuthenticated = asyncHandler(async (req, res, next) => {
   if (!token) {
     next();
   }
-  const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string);
+  try {
+    const decoded = jwt.verify(
+      token,
+      process.env.ACCESS_TOKEN_SECRET as string,
+    );
 
-  if (decoded) {
-    return res.status(400).json({
-      success: false,
-      message:
-        "You are already logged in. Please log out first or go to the dashboard.",
-    });
+    if (decoded) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already logged in. Please go to the dashboard.",
+      });
+    }
+  } catch (error: any) {
+    res.clearCookie("accessToken");
+    return next();
   }
-
-  next();
 });
