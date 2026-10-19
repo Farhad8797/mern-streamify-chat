@@ -170,7 +170,11 @@ const verifySignUpEmail = asyncHandler(async (req, res) => {
     { runValidators: true, new: true },
   );
 
-  return res.redirect(`${process.env.FRONTEND_URL}/sign-in?verified=true`);
+  return res
+    .status(200)
+    .json(
+      apiResponse({ statusCode: 200, message: "User Signed up successfully." }),
+    );
 });
 
 const signIn = asyncHandler(async (req, res) => {
@@ -547,9 +551,11 @@ const verifyPasswordRecoveryEmail = asyncHandler(async (req, res) => {
     );
   }
 
-  return res.redirect(
-    `${process.env.FRONTEND_URL}/change-password?token=${token}&verified=true`,
-  );
+  return res
+    .status(200)
+    .json(
+      apiResponse({ statusCode: 200, message: "Email verified successfully." }),
+    );
 });
 
 const updatePassword = asyncHandler(async (req, res) => {

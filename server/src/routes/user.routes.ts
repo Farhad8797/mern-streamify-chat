@@ -35,7 +35,7 @@ userRoute.post(
   registerUser,
 );
 userRoute.get("/verify-email", verifySignUpEmail);
-userRoute.post("/sign-in/", redirectIfAuthenticated, signIn);
+userRoute.post("/sign-in", redirectIfAuthenticated, signIn);
 userRoute.post("/sign-out", verifyJWT, signOut);
 userRoute.patch(
   "/update-user-info",

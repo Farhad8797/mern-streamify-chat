@@ -42,7 +42,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
 
   const user = await User.findById(isValidToken?._id);
 
-  if (!user) {
+  if (!user || !user.isVerified) {
     return res.status(401).json(
       apiResponse({
         statusCode: 401,

@@ -26,6 +26,6 @@ messageRoute.post(
   ]),
   sendMessage,
 );
-messageRoute.delete("/delete-message{/:messageid}", verifyJWT, deleteMessage);
+messageRoute.delete("/delete-message{/:messageId}", verifyJWT, deleteMessage);
 
 export default messageRoute;
