@@ -4,11 +4,12 @@ export default async function signUpEmail(
   receiver: string,
   verificationUrl: string,
 ) {
-  await resend.emails.send({
-    from: "Your App <onboarding@yourdomain.com>",
-    to: [receiver],
-    subject: "Verify your email address",
-    html: `
+  try {
+    await resend.emails.send({
+      from: "Acme <onboarding@resend.dev>",
+      to: [receiver],
+      subject: "Verify your email address",
+      html: `
     <div style="font-family: sans-serif; text-align: center; padding: 20px;">
       <h2>Welcome, ${receiver}!</h2>
       <p>Please click the button below to verify your email address:</p>
@@ -18,5 +19,8 @@ export default async function signUpEmail(
       <p style="margin-top: 20px; color: #666; font-size: 12px;">This link will expire in 24 hours.</p>
     </div>
   `,
-  });
+    });
+  } catch (err) {
+    console.error("Failed to send verification email:", err);
+  }
 }

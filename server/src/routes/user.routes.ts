@@ -13,6 +13,7 @@ import {
   resetPassword,
   verifyPasswordRecoveryEmail,
   updatePassword,
+  findAuthUser,
 } from "../controllers/user.controller.js";
 import arcjetProtection from "../middleware/aj.js";
 
@@ -34,8 +35,8 @@ userRoute.post(
   ]),
   registerUser,
 );
-userRoute.get("/verify-email", verifySignUpEmail);
-userRoute.post("/sign-in", redirectIfAuthenticated, signIn);
+userRoute.get("/verify-signup-email", verifySignUpEmail);
+userRoute.post("/sign-in", signIn);
 userRoute.post("/sign-out", verifyJWT, signOut);
 userRoute.patch(
   "/update-user-info",
@@ -57,5 +58,6 @@ userRoute.get("/verify-email-change", verifyNewEmail);
 userRoute.post("/reset-password", resetPassword);
 userRoute.get("/verify-password-change", verifyPasswordRecoveryEmail);
 userRoute.post("/update-password", updatePassword);
+userRoute.get("/auth-check", verifyJWT, findAuthUser);
 
 export default userRoute;

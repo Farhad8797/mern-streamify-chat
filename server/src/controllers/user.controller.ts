@@ -73,10 +73,10 @@ const registerUser = asyncHandler(async (req, res) => {
     );
     existingUser.emailVerificationToken = emailVerificationToken;
 
-    const emailVerificationURL = `${frontendURL}/api/v1/verify-email/?token=${emailVerificationToken}`;
+    const emailVerificationURL = `${frontendURL}/verify-signup-email?token=${emailVerificationToken}`;
 
     await existingUser.save({ validateBeforeSave: false });
-    await signUpEmail(fullName, emailVerificationURL);
+    await signUpEmail(email, emailVerificationURL);
     clearTemp();
     return res.status(200).json(
       apiResponse({
@@ -120,14 +120,14 @@ const registerUser = asyncHandler(async (req, res) => {
 
   clearTemp();
 
-  const emailVerificationURL = `${frontendURL}/verify-email?token=${emailVerificationToken}`;
-  await signUpEmail(fullName, emailVerificationURL);
+  const emailVerificationURL = `${frontendURL}/verify-signup-email?token=${emailVerificationToken}`;
+  await signUpEmail(email, emailVerificationURL);
 
   const createdUser = await User.findById(user._id);
   return res.status(201).json(
     apiResponse({
       statusCode: 201,
-      message: "User created successfully!",
+      message: "An email has been sent to you. Check that to verify.",
       data: createdUser,
     }),
   );
@@ -189,13 +189,13 @@ const signIn = asyncHandler(async (req, res) => {
     );
   }
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select("+password");
 
-  if (!user) {
+  if (!user || !user.isVerified) {
     return res.status(400).json(
       apiResponse({
         statusCode: 400,
-        message: "User is not registered",
+        message: "User is not registered or unverified.",
         success: false,
       }),
     );
@@ -601,6 +601,18 @@ const updatePassword = asyncHandler(async (req, res) => {
   );
 });
 
+const findAuthUser = asyncHandler(async (req, res) => {
+  const authUser = req.user;
+
+  return res.status(200).json(
+    apiResponse({
+      statusCode: 200,
+      message: "Authenticated user.",
+      data: authUser,
+    }),
+  );
+});
+
 export {
   registerUser,
   verifySignUpEmail,
@@ -612,4 +624,5 @@ export {
   resetPassword,
   verifyPasswordRecoveryEmail,
   updatePassword,
+  findAuthUser,
 };
