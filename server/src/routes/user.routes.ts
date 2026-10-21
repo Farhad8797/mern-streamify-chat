@@ -11,9 +11,9 @@ import {
   refreshToken,
   verifyNewEmail,
   resetPassword,
-  verifyPasswordRecoveryEmail,
   updatePassword,
   findAuthUser,
+  verifyPasswordRecoveryEmail,
 } from "../controllers/user.controller.js";
 import arcjetProtection from "../middleware/aj.js";
 
@@ -56,8 +56,8 @@ userRoute.patch(
 userRoute.post("/refresh-token", refreshToken);
 userRoute.get("/verify-email-change", verifyNewEmail);
 userRoute.post("/reset-password", resetPassword);
-userRoute.get("/verify-password-change", verifyPasswordRecoveryEmail);
 userRoute.post("/update-password", updatePassword);
 userRoute.get("/auth-check", verifyJWT, findAuthUser);
+userRoute.get("/verify-reset-password-email", verifyPasswordRecoveryEmail);
 
 export default userRoute;

@@ -19,7 +19,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     return res.status(400).json(
       apiResponse({
         statusCode: 400,
-        message: "No token found",
+        message: "No token found.",
         success: false,
       }),
     );

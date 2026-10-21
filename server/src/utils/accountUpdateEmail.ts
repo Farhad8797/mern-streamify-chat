@@ -5,7 +5,7 @@ async function sendEmailChangeVerification(newEmail: string, token: string) {
   const verificationUrl = `${frotendUrl}/verify-email-change?token=${token}`;
 
   await resend.emails.send({
-    from: "MERN streamify <support@yourdomain.com>",
+    from: "Acme <onboarding@resend.dev>",
     to: [newEmail],
     subject: "Verify your new email address",
     html: `
@@ -23,7 +23,7 @@ async function sendEmailChangeVerification(newEmail: string, token: string) {
 
 async function sendEmailChangeAlert(oldEmail: string) {
   await resend.emails.send({
-    from: "MERN Streamify <security@yourdomain.com>",
+    from: "Acme <onboarding@resend.dev>",
     to: [oldEmail],
     subject: "Security Alert: Email change requested",
     html: `
@@ -39,7 +39,7 @@ async function sendEmailChangeAlert(oldEmail: string) {
 
 async function sendProfileUpdateNotification(receiver: string) {
   await resend.emails.send({
-    from: "MERN streamify <security@yourdomain.com>",
+    from: "Acme <onboarding@resend.dev>",
     to: [receiver],
     subject: "Security Notification: Profile Updated",
     html: `
@@ -54,7 +54,7 @@ async function sendProfileUpdateNotification(receiver: string) {
 
 async function sendPasswordRecoveryEmail(receiver: string, resetUrl: string) {
   await resend.emails.send({
-    from: "Security <security@yourdomain.com>",
+    from: "Acme <onboarding@resend.dev>",
     to: [receiver],
     subject: "Reset your password",
     html: `

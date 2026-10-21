@@ -518,12 +518,12 @@ const resetPassword = asyncHandler(async (req, res) => {
   await redis.setex(redisKey, 900, JSON.stringify({ userId: user._id }));
   const resetUrl = `${frontendURL}/verify-password-recovery-email?token=${passwordRecoveryToken}`;
 
-  await sendPasswordRecoveryEmail(user!.email, resetUrl);
+  await sendPasswordRecoveryEmail(email, resetUrl);
 
   return res.status(200).json(
     apiResponse({
       statusCode: 200,
-      message: "An email has been sent to the user",
+      message: "An email has been sent to the user.",
     }),
   );
 });
@@ -562,16 +562,26 @@ const updatePassword = asyncHandler(async (req, res) => {
   const { token } = req.query;
   const { password, confirmPassword } = req.body;
 
-  if (
-    !token ||
-    !password ||
-    !confirmPassword ||
-    !(password === confirmPassword)
-  ) {
+  if (!token) {
+    console.log("Token issue.");
     return res.status(400).json(
       apiResponse({
         statusCode: 400,
-        message: "Token or password missing or mismatched password",
+        message: "Token missing or invalid token.",
+        success: false,
+      }),
+    );
+  }
+
+  if (!password || !confirmPassword || !(password === confirmPassword)) {
+    console.log("Password issue.");
+    console.log(
+      `${password}, ${confirmPassword}, ${password === confirmPassword}`,
+    );
+    return res.status(400).json(
+      apiResponse({
+        statusCode: 400,
+        message: "Password missing or mismatched password.",
         success: false,
       }),
     );
@@ -579,16 +589,23 @@ const updatePassword = asyncHandler(async (req, res) => {
 
   const tokenInfo = await redis.get(`password-change:${token}`);
   if (!tokenInfo) {
+    console.log("Token was not found in redis");
     res.status(400).json(
       apiResponse({
         statusCode: 400,
-        message: "Inavliad or expired token",
+        message: "Inavliad or expired token.",
+        success: false,
       }),
     );
   }
 
   const { userId } = JSON.parse(tokenInfo as string);
   const user = await User.findById(userId);
+
+  if (!user) {
+    console.log("User not found.");
+    return;
+  }
 
   user!.password = password;
   await user!.save();
@@ -622,7 +639,7 @@ export {
   refreshToken,
   verifyNewEmail,
   resetPassword,
-  verifyPasswordRecoveryEmail,
   updatePassword,
   findAuthUser,
+  verifyPasswordRecoveryEmail,
 };
