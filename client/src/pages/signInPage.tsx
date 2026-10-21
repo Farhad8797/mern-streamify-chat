@@ -7,7 +7,6 @@ import toast from "react-hot-toast";
 import axiosInstance from "../lib/axios";
 import useAuthStore from "../store/useAuthstore";
 
-// Zod schema for login validation
 const signInSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
@@ -33,7 +32,6 @@ export default function SignInPage() {
 
       if (response.status === 200 || response.status === 201) {
         toast.success(response.data?.message || "Signed in successfully!");
-        // Re-check authentication state in Zustand store after successful login
         await checkAuth();
         navigate("/");
       }
@@ -53,7 +51,7 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="card w-full max-w-md bg-base-100 shadow-xl border border-base-300">
         <div className="card-body">
           <h2 className="card-title text-2xl font-bold justify-center text-base-content mb-2">
@@ -63,14 +61,13 @@ export default function SignInPage() {
             Sign in to access your chat workspace
           </p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email Field */}
-            <div className="form-control w-full">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 ">
+            <div className="form-control ">
               <label className="label">
                 <span className="label-text font-medium">Email</span>
               </label>
               <label
-                className={`input input-bordered flex items-center gap-2 ${
+                className={`input input-bordered flex items-center gap-2 w-full ${
                   errors.email ? "input-error" : ""
                 }`}
               >
@@ -92,13 +89,12 @@ export default function SignInPage() {
               )}
             </div>
 
-            {/* Password Field */}
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text font-medium">Password</span>
               </label>
               <label
-                className={`input input-bordered flex items-center gap-2 ${
+                className={`input input-bordered flex items-center gap-2 w-full ${
                   errors.password ? "input-error" : ""
                 }`}
               >
@@ -120,7 +116,6 @@ export default function SignInPage() {
               )}
             </div>
 
-            {/* Submit Button */}
             <div className="form-control mt-6">
               <button
                 type="submit"
@@ -139,18 +134,23 @@ export default function SignInPage() {
             </div>
           </form>
 
-          {/* Sign Up Redirect */}
-          <div className="text-center mt-6">
+          <div className="text-center mt-6 ">
             <p className="text-sm text-base-content/70">
               Not registered?{" "}
               <Link
                 to="/sign-up"
-                className="link link-primary font-semibold hover:underline"
+                className="link-primary font-semibold hover:underline"
               >
                 Sign Up
               </Link>
             </p>
           </div>
+          <Link
+            className="text-center link-primary hover:link-secondary font-semibold"
+            to="/forgot-password"
+          >
+            Forgot password ?
+          </Link>
         </div>
       </div>
     </div>

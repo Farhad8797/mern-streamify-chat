@@ -13,6 +13,21 @@ interface authStoreInterface {
     statusCode?: number;
   } | null;
   signUp: (formData: FormData) => Promise<any>;
+  isSendingForgotPassword: boolean;
+  forgotPasswordResponse: {
+    success: boolean;
+    message: string;
+    statusCode?: number;
+  } | null;
+  forgotPassword: (email: string) => Promise<any>;
+  isVerifyingResetToken: boolean;
+  verifyResetToken: (token: string) => Promise<any>;
+  isUpdatingPassword: boolean;
+  updatePassword: (
+    password: string,
+    confirmPassword: string,
+    token: string,
+  ) => Promise<any>;
 }
 
 const useAuthStore = create<authStoreInterface>((set) => ({
@@ -21,6 +36,10 @@ const useAuthStore = create<authStoreInterface>((set) => ({
   isSigningIn: false,
   isSigningUp: false,
   signUpResponse: null,
+  isSendingForgotPassword: false,
+  forgotPasswordResponse: null,
+  isVerifyingResetToken: false,
+  isUpdatingPassword: false,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true });
@@ -42,7 +61,7 @@ const useAuthStore = create<authStoreInterface>((set) => ({
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const result = response.data; // Assumes backend sends { statusCode, message, success, data }
+      const result = response.data;
       set({ signUpResponse: { ...result, statusCode: response.status } });
       return { status: response.status, data: result };
     } catch (err: any) {
@@ -62,6 +81,83 @@ const useAuthStore = create<authStoreInterface>((set) => ({
       return { status, data: errorData };
     } finally {
       set({ isSigningUp: false });
+    }
+  },
+
+  forgotPassword: async (email: string) => {
+    set({ isSendingForgotPassword: true, forgotPasswordResponse: null });
+    try {
+      const response = await axiosInstance.post("/reset-password", { email });
+      const result = response.data;
+
+      const resPayload = {
+        success: result.success ?? true,
+        message: result.message || "Recovery email sent successfully.",
+        statusCode: response.status,
+      };
+
+      set({ forgotPasswordResponse: resPayload });
+      return { status: response.status, data: result };
+    } catch (err: any) {
+      const status = err.response?.status || 500;
+      const errorData = err.response?.data || {
+        success: false,
+        message: "Internal server error",
+      };
+
+      const resPayload = {
+        success: false,
+        message: errorData.message || "Something went wrong",
+        statusCode: status,
+      };
+
+      set({ forgotPasswordResponse: resPayload });
+      return { status, data: errorData };
+    } finally {
+      set({ isSendingForgotPassword: false });
+    }
+  },
+
+  verifyResetToken: async (token: string) => {
+    set({ isVerifyingResetToken: true });
+    try {
+      const response = await axiosInstance.get(
+        `/verify-reset-password-email?token=${token}`,
+      );
+      return { status: response.status, data: response.data };
+    } catch (err: any) {
+      const status = err.response?.status || 500;
+      const errorData = err.response?.data || {
+        success: false,
+        message: "Internal server error",
+      };
+      return { status, data: errorData };
+    } finally {
+      set({ isVerifyingResetToken: false });
+    }
+  },
+
+  updatePassword: async (
+    password: string,
+    confirmPassword: string,
+    token: string,
+  ) => {
+    set({ isUpdatingPassword: true });
+    try {
+      const response = await axiosInstance.post(
+        `/update-password?token=${token}`,
+        { password, confirmPassword },
+      );
+      return { status: response.status, data: response.data };
+    } catch (err: any) {
+      const status = err.response?.status || 500;
+      const errorData = err.response?.data || {
+        success: false,
+        message: "Internal server error",
+      };
+      return { status, data: errorData };
+    } finally {
+      set({ isUpdatingPassword: false });
     }
   },
 }));

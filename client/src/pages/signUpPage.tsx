@@ -54,14 +54,13 @@ export default function SignUpPage() {
       formData.append("coverImage", data.coverImage[0]);
     }
 
-    const res = await signUp(formData); // utilizing store action
+    const res = await signUp(formData);
 
     if (res?.status === 409) {
       toast.error(res.data.message || "Conflict error");
     } else if (res?.status === 200 || res?.status === 201) {
       reset();
     } else if (res?.status === 500) {
-      // Handled globally or inline below
     }
   };
 
@@ -77,7 +76,6 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        {/* Global 500 Error block */}
         {signUpResponse?.statusCode === 500 && (
           <div className="rounded-lg bg-red-950/50 border border-red-500/30 p-4 text-center">
             <p className="text-sm text-red-400 font-medium">
@@ -92,7 +90,6 @@ export default function SignUpPage() {
           </div>
         )}
 
-        {/* Success message state */}
         {signUpResponse?.success &&
         (signUpResponse.statusCode === 200 ||
           signUpResponse.statusCode === 201) ? (
@@ -144,7 +141,6 @@ export default function SignUpPage() {
               )}
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">
                 Password *
@@ -163,7 +159,6 @@ export default function SignUpPage() {
               )}
             </div>
 
-            {/* Profile Picture (Optional) */}
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">
                 Profile Picture (Optional)
@@ -176,7 +171,6 @@ export default function SignUpPage() {
               />
             </div>
 
-            {/* Cover Image (Optional) */}
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">
                 Cover Image (Optional)
@@ -189,7 +183,6 @@ export default function SignUpPage() {
               />
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isSigningUp}

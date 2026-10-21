@@ -7,6 +7,9 @@ import useAuthStore from "./store/useAuthstore";
 import { useEffect } from "react";
 import NotFoundPage from "./pages/404PageNotFound";
 import VerifySignUpEmailPage from "./pages/signUpVerification";
+import ForgotPasswordPage from "./pages/forgetPassword";
+import ForgotPasswordVerificationPage from "./pages/forgotPasswordVerification";
+import UpdatePasswordPage from "./pages/updatePasswordPage";
 
 export default function App() {
   const { authUser, checkAuth } = useAuthStore();
@@ -34,7 +37,22 @@ export default function App() {
         />
         <Route
           path="/verify-signup-email"
-          element={<VerifySignUpEmailPage />}
+          element={authUser ? <Navigate to="/" /> : <VerifySignUpEmailPage />}
+        />
+
+        <Route
+          path="/forgot-password"
+          element={authUser ? <Navigate to="/" /> : <ForgotPasswordPage />}
+        />
+        <Route
+          path="/verify-password-recovery-email"
+          element={
+            authUser ? <Navigate to="/" /> : <ForgotPasswordVerificationPage />
+          }
+        />
+        <Route
+          path="/update-password"
+          element={authUser ? <Navigate to="/" /> : <UpdatePasswordPage />}
         />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
