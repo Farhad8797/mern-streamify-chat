@@ -28,6 +28,8 @@ interface authStoreInterface {
     confirmPassword: string,
     token: string,
   ) => Promise<any>;
+  isSigningOut: boolean;
+  signOut: () => Promise<any>;
 }
 
 const useAuthStore = create<authStoreInterface>((set) => ({
@@ -40,6 +42,7 @@ const useAuthStore = create<authStoreInterface>((set) => ({
   forgotPasswordResponse: null,
   isVerifyingResetToken: false,
   isUpdatingPassword: false,
+  isSigningOut: false,
 
   checkAuth: async () => {
     set({ isCheckingAuth: true });
@@ -74,7 +77,7 @@ const useAuthStore = create<authStoreInterface>((set) => ({
       set({
         signUpResponse: {
           success: false,
-          message: errorData.message || "Something went wrong",
+          message: errorData.message || "Something went wrong.",
           statusCode: status,
         },
       });
@@ -158,6 +161,23 @@ const useAuthStore = create<authStoreInterface>((set) => ({
       return { status, data: errorData };
     } finally {
       set({ isUpdatingPassword: false });
+    }
+  },
+
+  signOut: async () => {
+    set({ isSigningOut: false });
+    try {
+      const response = await axiosInstance.post("/sign-out");
+      return { ...response };
+    } catch (err) {
+      const status = err.response?.status || 500;
+      const errorData = err.response?.data || {
+        success: false,
+        message: "Internal server error",
+      };
+      return { status, data: errorData };
+    } finally {
+      set({ isSigningOut: false });
     }
   },
 }));
