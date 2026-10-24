@@ -42,7 +42,7 @@ const useChatStore = create<useChatStoreInterface>((set, get) => ({
     set({ isLoadingChats: true });
     try {
       const response = await axiosInstance.get("/get-chats");
-      set({ allChats: response.data });
+      set({ allChats: response.data.data });
       return { ...response };
     } catch (err) {
       const status = err.response?.status || 500;
@@ -60,7 +60,7 @@ const useChatStore = create<useChatStoreInterface>((set, get) => ({
     set({ isLoadingContacts: true });
     try {
       const response = await axiosInstance.get("/get-contacts");
-      set({ allContacts: response.data });
+      set({ allContacts: response.data.data });
       return { ...response };
     } catch (err) {
       const status = err.response?.status || 500;
@@ -80,7 +80,7 @@ const useChatStore = create<useChatStoreInterface>((set, get) => ({
       const response = await axiosInstance.get(
         "/get-chat-messages{/:receiverId}",
       );
-      set({ allChatMessages: response.data });
+      set({ allChatMessages: response.data.data });
       return { ...response };
     } catch (err) {
       const status = err.response?.status || 500;
