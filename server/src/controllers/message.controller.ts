@@ -17,6 +17,7 @@ const getAllContacts = asyncHandler(async (req, res) => {
       apiResponse({
         statusCode: 200,
         message: "No contacts found.",
+        data: contacts,
       }),
     );
   }
@@ -195,7 +196,7 @@ const getChats = asyncHandler(async (req, res) => {
     },
     {
       $project: {
-        $otherUserId: {
+        otherUserId: {
           $cond: {
             if: { $eq: ["$sender", requesterId] },
             then: "$receiver",

@@ -255,7 +255,7 @@ const signOut = asyncHandler(async (req, res) => {
     .json(
       apiResponse({
         statusCode: 200,
-        message: "Successfully logged out user",
+        message: "Successfully logged out user.",
       }),
     );
 });
