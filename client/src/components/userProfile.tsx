@@ -16,7 +16,7 @@ export default function ProfileModal({
   if (!isOpen || !user) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="card w-full max-w-lg bg-base-100 shadow-xl border border-base-300 relative max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
@@ -57,7 +57,7 @@ export default function ProfileModal({
               <h3 className="text-sm font-semibold mb-2 text-base-content/80">
                 Shared Media Files
               </h3>
-              <div className="grid grid-cols-3 gap-2 bg-base-200 p-2 rounded-box min-h-[100px] items-center justify-center">
+              <div className="grid grid-cols-3 gap-2 bg-base-200 p-2 rounded-box min-h-25 items-center justify-center">
                 {user.mediaFiles?.length > 0 ? (
                   user.mediaFiles.map((media: string, idx: number) => (
                     <img

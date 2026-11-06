@@ -17,7 +17,7 @@ import { ContactsList } from "../components/contacts";
 import { ChatsTabList } from "../components/chats";
 
 export default function ChatsPage() {
-  const { authUser } = useAuthStore();
+  const { authUser, onlineUsers, isSigningOut, signOut } = useAuthStore();
   const {
     allContacts,
     loadContacts,
@@ -57,7 +57,6 @@ export default function ChatsPage() {
   const handleSendMessage = (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!messageText.trim()) return;
-    // Dispatch message logic here (updates local state instantly)
     setMessageText("");
   };
 
@@ -66,7 +65,6 @@ export default function ChatsPage() {
       <div
         className={`w-full md:w-[30%] border-r border-base-300 flex flex-col ${mobileView === "chat" ? "hidden md:flex" : "flex"}`}
       >
-        {/* Top: Current User Profile Pic */}
         <div className="p-4 border-b border-base-300 flex items-center justify-between">
           <div
             className="flex items-center gap-3 cursor-pointer"
@@ -86,7 +84,6 @@ export default function ChatsPage() {
           </div>
         </div>
 
-        {/* Search Bar */}
         <div className="p-3 border-b border-base-300">
           <label className="input input-bordered input-sm flex items-center gap-2">
             <Search className="w-4 h-4 opacity-50" />
@@ -120,7 +117,7 @@ export default function ChatsPage() {
             <ChatsTabList
               chats={allChats}
               onSelect={handleSelectChatUser}
-              activeUser={selectedUser}
+              activeUser={onlineUsers}
             />
           ) : (
             <ContactsList
@@ -131,14 +128,22 @@ export default function ChatsPage() {
         </div>
       </div>
 
-      {/* RIGHT PORTION */}
       <div
-        className={`flex-1 flex flex-col bg-base-100 ${mobileView === "list" ? "hidden md:flex" : "flex"}`}
+        className={`flex-1 flex flex-col relative ${mobileView === "list" ? "hidden md:flex" : "flex"}`}
       >
+        <div className="absolute top-4 right-4 z-20">
+          <button
+            disabled={isSigningOut}
+            onClick={signOut}
+            className="btn btn-sm btn-outline btn-error"
+          >
+            Sign Out
+          </button>
+        </div>
+
         {selectedUser ? (
           <>
-            {/* Right Top Header */}
-            <div className="p-4 border-b border-base-300 flex items-center justify-between">
+            <div className="p-4 border-b border-base-300 flex items-center justify-between pr-24">
               <div className="flex items-center gap-3">
                 <button
                   className="md:hidden btn btn-ghost btn-sm btn-circle"
@@ -176,7 +181,6 @@ export default function ChatsPage() {
               </div>
             </div>
 
-            {/* Chat Messages Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-base-200/50">
               {allChatMessages?.length === 0 ? (
                 <div className="h-full flex items-center justify-center">
@@ -196,7 +200,6 @@ export default function ChatsPage() {
               )}
             </div>
 
-            {/* Bottom Actions / Input Box */}
             <div className="p-4 border-t border-base-300 bg-base-100 flex items-center gap-3">
               <label className="btn btn-ghost btn-circle btn-sm cursor-pointer">
                 <Paperclip className="w-5 h-5 text-base-content/70" />
@@ -236,7 +239,6 @@ export default function ChatsPage() {
               </form>
             </div>
 
-            {/* Bottom Delete Chat Link */}
             <div className="px-4 py-2 bg-base-100 border-t border-base-200 text-right">
               <button
                 onClick={() => setShowDeleteModal(true)}
@@ -251,7 +253,6 @@ export default function ChatsPage() {
         )}
       </div>
 
-      {/* Profile Modals */}
       <ProfileModal
         user={authUser}
         isOpen={showMyProfile}
@@ -264,7 +265,6 @@ export default function ChatsPage() {
         onClose={() => setShowReceiverProfile(false)}
       />
 
-      {/* Delete Confirmation Dialog */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="card w-full max-w-sm bg-base-100 shadow-xl p-6 space-y-4">

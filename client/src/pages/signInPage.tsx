@@ -17,6 +17,7 @@ type SignInFormData = z.infer<typeof signInSchema>;
 export default function SignInPage() {
   const navigate = useNavigate();
   const checkAuth = useAuthStore((state) => state.checkAuth);
+  const { connectSocket } = useAuthStore();
 
   const {
     register,
@@ -33,7 +34,9 @@ export default function SignInPage() {
       if (response.status === 200 || response.status === 201) {
         toast.success(response.data?.message || "Signed in successfully!");
         await checkAuth();
+        connectSocket();
         navigate("/");
+        console.log("Signed In!");
       }
     } catch (err: any) {
       const status = err.response?.status;

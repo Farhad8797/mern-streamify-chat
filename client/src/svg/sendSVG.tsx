@@ -1,4 +1,4 @@
-export default function SndSVG({ h, w }) {
+export default function SendSVG({ h, w }) {
   return (
     <svg
       viewBox="0 0 24 24"

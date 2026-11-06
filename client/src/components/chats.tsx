@@ -7,6 +7,7 @@ export function ChatsTabList({
   onSelect: (user: any) => void;
   activeUser: any;
 }) {
+  console.log(activeUser);
   return (
     <div className="overflow-y-auto flex-1 divide-y divide-base-200">
       {chats?.length === 0 ? (
@@ -18,8 +19,14 @@ export function ChatsTabList({
           <div
             key={chat._id || chat.id}
             onClick={() => onSelect(chat)}
-            className={`flex items-center gap-3 p-3 hover:bg-base-200 cursor-pointer transition-colors ${activeUser?._id === chat._id ? "bg-base-200" : ""}`}
+            className={`flex items-center gap-3 p-3 hover:bg-base-200 cursor-pointer transition-colors`}
           >
+            {" "}
+            {activeUser === chat._id ? (
+              <span className="absolute bottom-0 right-0 status status-success status-sm"></span>
+            ) : (
+              ""
+            )}
             <img
               src={
                 chat.avatar ||

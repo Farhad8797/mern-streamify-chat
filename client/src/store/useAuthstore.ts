@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import axiosInstance from "../lib/axios";
+import io from "socket.io-client";
+import toast from "react-hot-toast";
 
 interface authStoreInterface {
   authUser: any;
@@ -30,9 +32,13 @@ interface authStoreInterface {
   ) => Promise<any>;
   isSigningOut: boolean;
   signOut: () => Promise<any>;
+  socket: any;
+  connectSocket: () => void;
+  onlineUsers: any[];
+  disconnectSocket: () => void;
 }
 
-const useAuthStore = create<authStoreInterface>((set) => ({
+const useAuthStore = create<authStoreInterface>((set, get) => ({
   authUser: null,
   isCheckingAuth: false,
   isSigningIn: false,
@@ -43,6 +49,8 @@ const useAuthStore = create<authStoreInterface>((set) => ({
   isVerifyingResetToken: false,
   isUpdatingPassword: false,
   isSigningOut: false,
+  socket: null,
+  onlineUsers: [],
 
   checkAuth: async () => {
     set({ isCheckingAuth: true });
@@ -165,20 +173,53 @@ const useAuthStore = create<authStoreInterface>((set) => ({
   },
 
   signOut: async () => {
-    set({ isSigningOut: false });
+    set({ isSigningOut: true });
     try {
       const response = await axiosInstance.post("/sign-out");
-      return { ...response };
-    } catch (err) {
-      const status = err.response?.status || 500;
+
+      if (get().socket.connected) {
+        get().disconnectSocket();
+      }
+      set({ authUser: null });
+
+      toast.success(response.data?.message || "Signed out successfully!");
+      window.location.href = "/sign-in";
+
+      return { success: true };
+    } catch (err: any) {
       const errorData = err.response?.data || {
-        success: false,
         message: "Internal server error",
       };
-      return { status, data: errorData };
+
+      get().disconnectSocket();
+      set({ authUser: null });
+
+      toast.error(errorData.message);
+      window.location.href = "/sign-in";
+
+      return { success: false };
     } finally {
       set({ isSigningOut: false });
     }
+  },
+
+  connectSocket: () => {
+    if (!get().authUser || get().socket?.connected) {
+      console.log("Function ended here");
+      return;
+    }
+
+    const socket = io(import.meta.env.VITE_API_SOCKET_URI, {
+      withCredentials: true,
+    });
+
+    socket.connect();
+    set({ socket });
+    console.log("Socket connected successfully ", socket);
+  },
+
+  disconnectSocket: () => {
+    if (get().socket?.connected) get().socket?.disconnect();
   },
 }));
 
