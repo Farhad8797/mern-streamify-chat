@@ -17,6 +17,7 @@
     "@arcjet/node": "^1.5.0",
     "@imagekit/nodejs": "^7.12.1",
     "bcryptjs": "^3.0.3",
+    "cookie": "^2.0.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^18.0.7",
@@ -26,9 +27,11 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.11.1",
     "multer": "^2.4.0",
-    "resend": "^6.33.0"
+    "resend": "^6.33.0",
+    "socket.io": "^4.8.4"
   },
   "devDependencies": {
+    "@types/cookie": "^0.6.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

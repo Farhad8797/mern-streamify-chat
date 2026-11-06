@@ -9,3 +9,21 @@ Content-Type: application/json
   "email":"gdvbhbhb@gmail.com",
   "password":"farhad8797@"
 }
+
+### new password
+POST http://localhost:8000/api/v1/update-password?token=ddca9ed031a695f41e5d73d664bbf75965ef5a3e4522eadbda26a8edc2a0204a
+Content-Type: application/json
+
+{
+  "password":"farhad8797@",
+  "confirmPassword":"farhad8797@"
+}
+
+### sign out
+POST http://localhost:8000/api/v1/sign-out
+
+### get chat partners
+GET http://localhost:8000/api/v1/get-chats
+
+### getting contacts
+GET http://localhost:8000/api/v1/get-contacts

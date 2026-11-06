@@ -1,11 +1,15 @@
+import { Server } from "socket.io";
+import http from "http";
+import type { Express } from "express";
 import express from "express";
-import cors from "cors";
+import socketAuthMiddleware from "./middleware/socket.auth.js";
 import cookieParser from "cookie-parser";
-import { type Express } from "express";
 import type { Request, Response } from "express";
 import apiResponse from "./utils/apiResponse.js";
+import cors from "cors";
 
 const app: Express = express();
+const server = http.createServer(app);
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -14,8 +18,8 @@ const allowedOrigins = [
   process.env.CORS_ORIGIN,
 ].filter(Boolean);
 
-app.use(
-  cors({
+const io = new Server(server, {
+  cors: {
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -24,8 +28,22 @@ app.use(
       }
     },
     credentials: true,
+  },
+});
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Blocked by Express CORS"));
+      }
+    },
+    credentials: true,
   }),
 );
+io.use(socketAuthMiddleware);
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.static("public"));
@@ -49,4 +67,18 @@ app.use("/*splat", (req: Request, res: Response) => {
   );
 });
 
-export default app;
+const userSocketObj: Record<string, any> = {};
+
+io.on("connection", (socket) => {
+  console.log("Socket connected: ", socket.user?.fullName);
+  userSocketObj.userId = socket._id;
+  io.emit("getOnlineUsers", Object.keys(userSocketObj));
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected: ", socket.user?.fullName);
+    delete userSocketObj.userId;
+    io.emit("getOnlineUsers", Object.keys(userSocketObj));
+  });
+});
+
+export { server, app };

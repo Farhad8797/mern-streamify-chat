@@ -2,7 +2,7 @@ import mongoose, { Model, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-interface UserInterface {
+export interface UserInterface {
   email: string;
   fullName: string;
   avatarFile: {
