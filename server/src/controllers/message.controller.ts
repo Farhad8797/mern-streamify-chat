@@ -7,6 +7,7 @@ import uploadFile from "../utils/mediaUpload.js";
 import mongoose from "mongoose";
 import client from "../config/imagekit.js";
 import clearTemp from "../utils/clearTemp.js";
+import { io, userSocketObj } from "../app.js";
 
 const getAllContacts = asyncHandler(async (req, res) => {
   const senderId = req.user._id;
@@ -48,10 +49,10 @@ const getChatMessage = asyncHandler(async (req, res) => {
     $or: [
       {
         sender: senderId,
-        receiver: new mongoose.Schema.Types.ObjectId(receiverId as string),
+        receiver: new mongoose.Types.ObjectId(receiverId as string),
       },
       {
-        sender: new mongoose.Schema.Types.ObjectId(receiverId as string),
+        sender: new mongoose.Types.ObjectId(receiverId as string),
         receiver: senderId,
       },
     ],
@@ -175,6 +176,15 @@ const sendMessage = asyncHandler(async (req, res) => {
   });
 
   clearTemp();
+
+  const receiverSocketId = userSocketObj[receiverId.toString()];
+  console.log(receiverId, userSocketObj);
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("newMessage", createdMessage);
+    console.log("Server emitted the event to socket id:", receiverSocketId);
+  } else {
+    console.log("Receiver is offline, socket ID not found in map.");
+  }
 
   return res.status(200).json(
     apiResponse({

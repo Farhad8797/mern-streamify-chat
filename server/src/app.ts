@@ -67,18 +67,30 @@ app.use("/*splat", (req: Request, res: Response) => {
   );
 });
 
-const userSocketObj: Record<string, any> = {};
+const userSocketObj: Record<string, string> = {};
 
 io.on("connection", (socket) => {
   console.log("Socket connected: ", socket.user?.fullName);
-  userSocketObj.userId = socket._id;
+
+  const userId =
+    socket._id?.toString() || (socket.handshake.query.userId as string);
+
+  if (userId) {
+    userSocketObj[userId] = socket.id;
+  }
+
+  console.log("Current Online Users Map:", userSocketObj);
+
   io.emit("getOnlineUsers", Object.keys(userSocketObj));
 
   socket.on("disconnect", () => {
     console.log("Socket disconnected: ", socket.user?.fullName);
-    delete userSocketObj.userId;
+    if (userId) {
+      delete userSocketObj[userId];
+    }
     io.emit("getOnlineUsers", Object.keys(userSocketObj));
+    console.log("Current Online Users Map after disconnect:", userSocketObj);
   });
 });
 
-export { server, app };
+export { server, app, userSocketObj, io };
