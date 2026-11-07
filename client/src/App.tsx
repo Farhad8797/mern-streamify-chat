@@ -12,12 +12,17 @@ import ForgotPasswordVerificationPage from "./pages/forgotPasswordVerification";
 import UpdatePasswordPage from "./pages/updatePasswordPage";
 
 export default function App() {
-  const { authUser, checkAuth } = useAuthStore();
+  const { authUser, checkAuth, connectSocket, disconnectSocket } =
+    useAuthStore();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
+  useEffect(() => {
+    if (authUser) connectSocket();
+    else disconnectSocket();
+  }, [authUser, connectSocket, disconnectSocket]);
   console.log(authUser);
 
   return (

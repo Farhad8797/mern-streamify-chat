@@ -19,7 +19,7 @@ export function ChatsTabList({
           <div
             key={chat._id || chat.id}
             onClick={() => onSelect(chat)}
-            className={`flex items-center gap-3 p-3 hover:bg-base-200 cursor-pointer transition-colors`}
+            className={`flex items-center gap-3 p-3 hover:bg-white/20 cursor-pointer transition-colors`}
           >
             {" "}
             {activeUser === chat._id ? (
@@ -38,7 +38,7 @@ export function ChatsTabList({
               <h4 className="font-semibold text-sm truncate">
                 {chat.fullName}
               </h4>
-              <p className="text-xs text-base-content/60 truncate">
+              <p className="text-xs truncate text-white">
                 {chat.lastMessage || "Start a conversation..."}
               </p>
             </div>
